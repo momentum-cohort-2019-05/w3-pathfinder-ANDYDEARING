@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageColor
 
 def read_file(file):
     with open(file) as source_file:
@@ -8,6 +8,7 @@ def read_file(file):
     source_two_d_list = []
 
     for line in source_str:
+        # I don't know why I'm getting empty lists, but I can clean them out
         if line.split() != []:
             source_two_d_list.append([int(_) for _ in line.split()])
 
@@ -54,23 +55,46 @@ class MapImage:
         self.image.show()
 
     def build_image(self):
-        img = Image.new('RGBA', (map_data.get_width(), map_data.get_length()) )
-        for x in range(map_data.get_width()):
-            for y in range(map_data.get_length()):
-                gray_value = self.map_data.get_grayscale_value(y,x)
-                img.putpixel( (x,y), (gray_value,gray_value,gray_value,255) )
+        img = Image.new('RGBA', (self.map_data.get_width(), self.map_data.get_length()) )
+        for column in range(self.map_data.get_width()):
+            for row in range(self.map_data.get_length()):
+                # in the data, the format is row, column
+                gray_value = self.map_data.get_grayscale_value(row, column)
+                # in the image, the format is column, row
+                img.putpixel( (column, row), (gray_value,gray_value,gray_value,255) )
         return img
+    
+    def putpixel(self, column_row_tup, color="green"):
+        self.image.putpixel(column_row_tup,ImageColor.getcolor(color, "RGBA"))
+        return None
 
-# file = input("Which file shall I use? ")
-file = "elevation_large.txt"
+class Pathfinder:
+    def __init__(self, map_data, map_image):
+        self.map_data = map_data
+        self.map_image = map_image
+        self.starting_pos = (0,0)
+    
+    def set_start(self, column, row):
+        self.starting_pos = (column, row)
+        return None
+
+    def find_greedy_path(self):
+        self.map_image.putpixel(self.starting_pos)
+
+
+file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
-
-
-
-
-# print(map_data.get_grayscale_value(400,400))
+pathfinder = Pathfinder(map_data,map_image)
+pathfinder.set_start(30,90)
+pathfinder.find_greedy_path()
 map_image.show()
+
+
+
+
+# file = input("Which file shall I use? ")
+# print(map_data.get_grayscale_value(400,400))
 
 
 
