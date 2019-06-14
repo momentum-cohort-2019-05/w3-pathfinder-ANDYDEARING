@@ -20,14 +20,16 @@ class MapData:
         self.min_value = self.get_min()
 
     def get_width(self):
-        return len(self.data_file)
-
-    def get_length(self):
+        """return the number of columns"""
         return len(self.data_file[0])
 
-    def get_grayscale_value(self, x_coord, y_coord):
+    def get_length(self):
+        """return the number of rows"""
+        return len(self.data_file)
+
+    def get_grayscale_value(self, row, column):
         gray_value = int((self.max_value - self.min_value) / 256)
-        return int((self.data_file[x_coord][y_coord]-self.min_value) / gray_value)
+        return int((self.data_file[row][column]-self.min_value) / gray_value)
 
     def get_min(self):
         list_of_mins = []
@@ -55,12 +57,12 @@ class MapImage:
         img = Image.new('RGBA', (map_data.get_width(), map_data.get_length()) )
         for x in range(map_data.get_width()):
             for y in range(map_data.get_length()):
-                gray_value = self.map_data.get_grayscale_value(x,y)
+                gray_value = self.map_data.get_grayscale_value(y,x)
                 img.putpixel( (x,y), (gray_value,gray_value,gray_value,255) )
         return img
 
 # file = input("Which file shall I use? ")
-file = "elevation_small.txt"
+file = "elevation_large.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 
