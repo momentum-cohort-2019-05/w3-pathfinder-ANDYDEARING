@@ -53,14 +53,22 @@ class MapImage:
 
     def build_image(self):
         img = Image.new('RGBA', (map_data.get_width(), map_data.get_length()) )
+        for x in range(map_data.get_width()):
+            for y in range(map_data.get_length()):
+                gray_value = self.map_data.get_grayscale_value(x,y)
+                img.putpixel( (x,y), (gray_value,gray_value,gray_value,255) )
         return img
 
 # file = input("Which file shall I use? ")
-file = "elevation_large.txt"
+file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
-print(map_data.get_grayscale_value(400,400))
-# map_image.show()
+
+
+
+
+# print(map_data.get_grayscale_value(400,400))
+map_image.show()
 
 
 
