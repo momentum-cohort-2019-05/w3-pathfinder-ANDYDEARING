@@ -15,7 +15,10 @@ def read_file(file):
     return source_two_d_list
 
 class MapData:
+    """class to hold topographical data for a map"""
     def __init__(self, data_file):
+        """expects data_file as a 2d list of int elevations
+        min and max value required to set color gradients"""
         self.data_file = data_file
         self.max_value = self.get_max()
         self.min_value = self.get_min()
@@ -28,101 +31,114 @@ class MapData:
         """return the number of rows"""
         return len(self.data_file)
 
-    def get_grayscale_value(self, row, column):
-        gray_value = int((self.max_value - self.min_value) / 256)
-        return int((self.data_file[row][column]-self.min_value) / gray_value)
+    def get_grayscale_value(self, coord_x_y):
+        """distrubtes 256 shades of gray over the range of data using
+        max and min values, takes an x,y tuple returns an int for the
+         gray of the point requested"""
+        gray_value = (self.max_value - self.min_value) / 256
+        return int((self.data_file[coord_x_y[1]][coord_x_y[0]]-self.min_value) / gray_value)
 
     def get_min(self):
+        """returns the minimum value of the data_file"""
         list_of_mins = []
         for row in self.data_file:
             list_of_mins.append(min(row))
-        # print(min(list_of_mins))
         return min(list_of_mins)
 
     def get_max(self):
+        """returns the maximum value of the data_file"""
         list_of_maxes = []
         for row in self.data_file:
             list_of_maxes.append(max(row))
-        # print(max(list_of_maxes))
         return max(list_of_maxes)
 
-    def get_value(self, column, row):
+    def get_value(self, coord_x_y):
+        """takes a coord_x_y tuple and returns the elevation
+        value, returning None if not found"""
         try:
-            return self.data_file[row][column]
+            return self.data_file[coord_x_y[1]][coord_x_y[0]]
         except:
             return None
 
 class MapImage:
+    """class to hold map images generated from MapData"""
     def __init__(self, map_data):
+        """build the map image in grayscale from the data"""
         self.map_data = map_data
         self.image = self.build_image()
     
     def show(self):
+        """displays the MapImage"""
         self.image.show()
 
     def build_image(self):
+        """builds the image in RGBA format, grayscale"""
         img = Image.new('RGBA', (self.map_data.get_width(), self.map_data.get_length()) )
-        for column in range(self.map_data.get_width()):
-            for row in range(self.map_data.get_length()):
-                # in the data, the format is row, column
-                gray_value = self.map_data.get_grayscale_value(row, column)
-                # in the image, the format is column, row
-                img.putpixel( (column, row), (gray_value,gray_value,gray_value,255) )
+        for x in range(self.map_data.get_width()):
+            for y in range(self.map_data.get_length()):
+                gray_value = self.map_data.get_grayscale_value((x,y))
+                img.putpixel((x,y), (gray_value,gray_value,gray_value,255))
         return img
     
     def putpixel(self, column_row_tup, color="red"):
-        # print(column_row_tup)
+        """for drawing paths, defaults to red"""
         self.image.putpixel(column_row_tup,ImageColor.getcolor(color, "RGBA"))
         return None
     
     def save(self, path):
+        """saves the image file to the passed path"""
         self.image.save(path)
         return None
 
 class Pathfinder:
     def __init__(self, map_data, map_image):
+        """loads a MapData, MapImage, and defaults"""
         self.map_data = map_data
         self.map_image = map_image
         self.curr_pos = (0,0)
         self.total_delta = 0
     
-    def set_start(self, column, row):
-        self.curr_pos = (column, row)
+    def set_start(self, coord_x_y):
+        """resets the starting position to the passed coordinates
+        and total_delta to 0, takes an (x,y) tuple"""
+        self.curr_pos = (coord_x_y[0], coord_x_y[1])
         self.total_delta = 0
         return None
 
-    def get_column(self):
+    def get_x(self):
         return self.curr_pos[0]
 
-    def get_row(self):
+    def get_y(self):
         return self.curr_pos[1]
 
-    def find_greedy_path(self, color="red"):
+    def get_greedy_potenitals(self):
+        """returns the next 3 coord tuples for greedy"""
+        return (self.get_x()+1,self.get_y()+1), (self.get_x()+1, self.get_y()), (self.get_x()+1, self.get_y()-1)
+
+    def find_greedy_path(self, color="cyan"):
+        """finds the path by the greedy algorithm"""
         # draw the starting point
         self.map_image.putpixel(self.curr_pos)
         # move from left to right via the greedy algorithm
-        for _ in range(self.map_data.get_width()-self.curr_column()-1):
-            curr_row = self.get_row()
-            curr_column = self.get_column()
-            right_move_tup = self.get_greedy_move( (curr_column+1,curr_row+1), (curr_column+1, curr_row), (curr_column+1, curr_row-1) )
-            self.curr_pos = right_move_tup
-            # print("right_move_tup", right_move_tup)
+        for _ in range(self.map_data.get_width()-self.get_x()-1):
+            up_right, right, down_right = self.get_greedy_potenitals()
+            next_move_tup = self.get_greedy_move(up_right, right, down_right)
+            self.curr_pos = next_move_tup
             self.map_image.putpixel(self.curr_pos, color)
 
     def get_greedy_move(self, up_right, right, down_right):
-        """recieves three tuples of (column, row) data (potentially None) and
+        """recieves three tuples of (x,y) data (potentially None) and
         selects the best move by the greedy algorithm, returning a (column,row)
         tuple"""
-        curr_elevation = self.map_data.get_value(self.get_column(),self.get_row())
+        curr_elevation = self.map_data.get_value(self.curr_pos)
         new_moves = {}
-        # breakpoint()
-        new_elevation = map_data.get_value(up_right[1],up_right[0])
+        new_elevation = self.map_data.get_value(up_right)
         if new_elevation is not None:
             new_moves[up_right] = abs(curr_elevation-new_elevation)
-        new_elevation = map_data.get_value(right[1],right[0])
+        new_elevation = self.map_data.get_value(right)
         if new_elevation is not None:
             new_moves[right] = abs(curr_elevation-new_elevation)
-        new_elevation = map_data.get_value(down_right[1],down_right[0])
+        new_elevation = self.map_data.get_value(down_right)
         if new_elevation is not None:
             new_moves[down_right] = abs(curr_elevation-new_elevation)
         right_move = sorted(new_moves.items(),key=lambda move: move[1])[0][0]
@@ -131,19 +147,6 @@ class Pathfinder:
 
     def get_total_delta(self):
         return self.total_delta
-
-
-            # move_deltas = {}
-            # current_elevation = self.map_data.get_value(self.curr_pos)
-
-            # up_right_tup = (self.curr_column()+1,self.curr_row()+1)
-            # right_tup = (self.curr_column()+1,self.curr_row())
-            # down_right_tup = (self.curr_column()+1,self.curr_row()-1)
-
-            # move_delats[up_right] = self.map_data.get_value(up_right)
-            # right = self.map_data.get_value()
-            # down_right = self.map_data.get_value()
-
 
     
     def curr_column(self):
@@ -163,15 +166,15 @@ pathfinder = Pathfinder(map_data,map_image)
 best_delta = None
 best_y = 0
 for y in range(map_data.get_length()):
-    pathfinder.set_start(0,y)
+    pathfinder.set_start((0,y))
     pathfinder.find_greedy_path()
     if best_delta is None or pathfinder.get_total_delta() < best_delta:
         best_delta = pathfinder.get_total_delta()
         best_y = y
-pathfinder.set_start(0, best_y)
-pathfinder.find_greedy_path("purple")
+pathfinder.set_start((0,best_y))
+pathfinder.find_greedy_path("lightgreen")
 map_image.show()
-map_image.save("friday_night_path.png")
+map_image.save("friday_night_path2.png")
 
 
 
