@@ -71,6 +71,7 @@ class MapImage:
         return img
     
     def putpixel(self, column_row_tup, color="green"):
+        # print(column_row_tup)
         self.image.putpixel(column_row_tup,ImageColor.getcolor(color, "RGBA"))
         return None
 
@@ -94,11 +95,12 @@ class Pathfinder:
         # draw the starting point
         self.map_image.putpixel(self.curr_pos)
         # move from left to right via the greedy algorithm
-        for _ in range(self.map_data.get_width()-self.curr_column()):
+        for _ in range(self.map_data.get_width()-self.curr_column()-1):
             curr_row = self.get_row()
             curr_column = self.get_column()
-            right_move_tup = self.get_greedy_move( (curr_column+1,curr_row+1), (curr_column+1, curr_row), (curr_column+1, curr_row-1)      )
+            right_move_tup = self.get_greedy_move( (curr_column+1,curr_row+1), (curr_column+1, curr_row), (curr_column+1, curr_row-1) )
             self.curr_pos = right_move_tup
+            # print("right_move_tup", right_move_tup)
             self.map_image.putpixel(self.curr_pos)
 
     def get_greedy_move(self, up_right, right, down_right):
@@ -107,16 +109,17 @@ class Pathfinder:
         tuple"""
         curr_elevation = self.map_data.get_value(self.get_column(),self.get_row())
         new_moves = {}
-        if up_right is not None:
-            new_elevation = map_data.get_value(up_right[1],up_right[0])
+        # breakpoint()
+        new_elevation = map_data.get_value(up_right[1],up_right[0])
+        if new_elevation is not None:
             new_moves[up_right] = abs(curr_elevation-new_elevation)
-        if right is not None:
-            new_elevation = map_data.get_value(right[1],right[0])
+        new_elevation = map_data.get_value(right[1],right[0])
+        if new_elevation is not None:
             new_moves[right] = abs(curr_elevation-new_elevation)
-        if down_right is not None:
-            new_elevation = map_data.get_value(down_right[1],down_right[0])
+        new_elevation = map_data.get_value(down_right[1],down_right[0])
+        if new_elevation is not None:
             new_moves[down_right] = abs(curr_elevation-new_elevation)
-        
+        right_move = sorted(new_moves.items(),key=lambda move: move[1])[0][0]
         return right_move
 
 
@@ -134,10 +137,10 @@ class Pathfinder:
 
     
     def curr_column(self):
-        return curr_pos[0]
+        return self.curr_pos[0]
 
     def curr_row(self):
-        return curr_pos[1]
+        return self.curr_pos[1]
 
 
 
@@ -147,7 +150,7 @@ file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
-pathfinder.set_start(0,90)
+pathfinder.set_start(0,200)
 pathfinder.find_greedy_path()
 map_image.show()
 
