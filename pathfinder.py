@@ -98,12 +98,14 @@ class Pathfinder:
         self.map_image = map_image
         self.curr_pos = (0,0)
         self.total_delta = 0
+        self.path_record = []
     
     def set_start(self, coord_x_y):
         """resets the starting position to the passed coordinates
         and total_delta to 0, takes an (x,y) tuple"""
         self.curr_pos = (coord_x_y[0], coord_x_y[1])
         self.total_delta = 0
+        self.path_record = []
         return None
 
     def get_x(self):
@@ -156,33 +158,38 @@ class Pathfinder:
         else:
             right_move = right_move_list[0][0]
         self.total_delta += new_moves[right_move]
+        self.path_record.append(right_move)
         return right_move
 
     def get_total_delta(self):
         """returns the total elevation change"""
         return self.total_delta
 
+    def get_path_record(self):
+        """returns the path record list of (x,y) tuples"""
+        return self.path_record
 
+    def retrace_path(self, path_list, color="blue"):
+        """retraces a line by a list of tuples"""
+        for coord in path_list:
+            self.map_image.putpixel(coord, color)
+        return None
 
-
-file = "elevation_large.txt"
+# open the file and build the map objecs
+file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
 
-# make a path for every y coordinate
-deltas = {}
+# make a path for every y coordinate, recording them
+delta_paths = {}
 for y in range(map_data.get_length()):
     pathfinder.set_start((0,y))
     pathfinder.find_greedy_path()
-    deltas[y] = pathfinder.get_total_delta()
+    delta_paths[pathfinder.get_total_delta()] = pathfinder.get_path_record()
 # sort them and choose the smallest delta
-best_y = sorted(deltas.items(),key=lambda delta: delta[1])[0][0]
+best_path = sorted(delta_paths.items(),key=lambda delta: delta[0])[0][1]
 
-# redraw that line in green - after adding the coinflip, this
-# is now wrong because it is randomized
-pathfinder.set_start((0,best_y))
-pathfinder.find_greedy_path("lightgreen")
-
+# redraw that line in red
+pathfinder.retrace_path(best_path, "red")
 map_image.show()
-# map_image.save("friday_night_path2.png")
