@@ -1,4 +1,5 @@
 from PIL import Image, ImageColor
+import random
 
 def read_file(file):
     with open(file) as source_file:
@@ -142,14 +143,24 @@ class Pathfinder:
         new_elevation = self.map_data.get_value(down_right)
         if new_elevation is not None:
             new_moves[down_right] = abs(curr_elevation-new_elevation)
-        right_move = sorted(new_moves.items(),key=lambda move: move[1])[0][0]
+        right_move_list = sorted(new_moves.items(),key=lambda move: move[1])
+        # if there's a tie
+        if right_move_list[0][1]==right_move_list[1][1]:
+        # and it's a three way tie
+            if len(right_move_list) == 3 and right_move_list[0][1]==right_move_list[2][1]:
+                right_move = right_move_list[random.randint(0,2)][0]
+            # otherwise flip a coin
+            else:
+                right_move = right_move_list[random.randint(0,1)][0]
+        # or choose the winner if it's clear
+        else:
+            right_move = right_move_list[0][0]
         self.total_delta += new_moves[right_move]
         return right_move
 
     def get_total_delta(self):
+        """returns the total elevation change"""
         return self.total_delta
-
-# def best_greedy_path():
 
 
 
@@ -158,14 +169,20 @@ file = "elevation_large.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
+
+# make a path for every y coordinate
 deltas = {}
 for y in range(map_data.get_length()):
     pathfinder.set_start((0,y))
     pathfinder.find_greedy_path()
     deltas[y] = pathfinder.get_total_delta()
-# breakpoint()
+# sort them and choose the smallest delta
 best_y = sorted(deltas.items(),key=lambda delta: delta[1])[0][0]
+
+# redraw that line in green - after adding the coinflip, this
+# is now wrong because it is randomized
 pathfinder.set_start((0,best_y))
 pathfinder.find_greedy_path("lightgreen")
+
 map_image.show()
 # map_image.save("friday_night_path2.png")
