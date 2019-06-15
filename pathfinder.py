@@ -70,9 +70,13 @@ class MapImage:
                 img.putpixel( (column, row), (gray_value,gray_value,gray_value,255) )
         return img
     
-    def putpixel(self, column_row_tup, color="green"):
+    def putpixel(self, column_row_tup, color="red"):
         # print(column_row_tup)
         self.image.putpixel(column_row_tup,ImageColor.getcolor(color, "RGBA"))
+        return None
+    
+    def save(self, path):
+        self.image.save(path)
         return None
 
 class Pathfinder:
@@ -80,9 +84,11 @@ class Pathfinder:
         self.map_data = map_data
         self.map_image = map_image
         self.curr_pos = (0,0)
+        self.total_delta = 0
     
     def set_start(self, column, row):
         self.curr_pos = (column, row)
+        self.total_delta = 0
         return None
 
     def get_column(self):
@@ -91,7 +97,7 @@ class Pathfinder:
     def get_row(self):
         return self.curr_pos[1]
 
-    def find_greedy_path(self):
+    def find_greedy_path(self, color="red"):
         # draw the starting point
         self.map_image.putpixel(self.curr_pos)
         # move from left to right via the greedy algorithm
@@ -101,7 +107,7 @@ class Pathfinder:
             right_move_tup = self.get_greedy_move( (curr_column+1,curr_row+1), (curr_column+1, curr_row), (curr_column+1, curr_row-1) )
             self.curr_pos = right_move_tup
             # print("right_move_tup", right_move_tup)
-            self.map_image.putpixel(self.curr_pos)
+            self.map_image.putpixel(self.curr_pos, color)
 
     def get_greedy_move(self, up_right, right, down_right):
         """recieves three tuples of (column, row) data (potentially None) and
@@ -120,7 +126,11 @@ class Pathfinder:
         if new_elevation is not None:
             new_moves[down_right] = abs(curr_elevation-new_elevation)
         right_move = sorted(new_moves.items(),key=lambda move: move[1])[0][0]
+        self.total_delta += new_moves[right_move]
         return right_move
+
+    def get_total_delta(self):
+        return self.total_delta
 
 
             # move_deltas = {}
@@ -150,10 +160,18 @@ file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
-pathfinder.set_start(0,200)
-pathfinder.find_greedy_path()
+best_delta = None
+best_y = 0
+for y in range(map_data.get_length()):
+    pathfinder.set_start(0,y)
+    pathfinder.find_greedy_path()
+    if best_delta is None or pathfinder.get_total_delta() < best_delta:
+        best_delta = pathfinder.get_total_delta()
+        best_y = y
+pathfinder.set_start(0, best_y)
+pathfinder.find_greedy_path("purple")
 map_image.show()
-
+map_image.save("friday_night_path.png")
 
 
 
