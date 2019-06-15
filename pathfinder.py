@@ -112,7 +112,8 @@ class Pathfinder:
         return self.curr_pos[1]
 
     def get_greedy_potenitals(self):
-        """returns the next 3 coord tuples for greedy"""
+        """returns the next 3 coord tuples for greedy in the
+        order: up_right, right, down_right"""
         return (self.get_x()+1,self.get_y()+1), (self.get_x()+1, self.get_y()), (self.get_x()+1, self.get_y()-1)
 
     def find_greedy_path(self, color="cyan"):
@@ -148,41 +149,23 @@ class Pathfinder:
     def get_total_delta(self):
         return self.total_delta
 
-    
-    def curr_column(self):
-        return self.curr_pos[0]
-
-    def curr_row(self):
-        return self.curr_pos[1]
+# def best_greedy_path():
 
 
 
 
-
-file = "elevation_small.txt"
+file = "elevation_large.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
-best_delta = None
-best_y = 0
+deltas = {}
 for y in range(map_data.get_length()):
     pathfinder.set_start((0,y))
     pathfinder.find_greedy_path()
-    if best_delta is None or pathfinder.get_total_delta() < best_delta:
-        best_delta = pathfinder.get_total_delta()
-        best_y = y
+    deltas[y] = pathfinder.get_total_delta()
+# breakpoint()
+best_y = sorted(deltas.items(),key=lambda delta: delta[1])[0][0]
 pathfinder.set_start((0,best_y))
 pathfinder.find_greedy_path("lightgreen")
 map_image.show()
-map_image.save("friday_night_path2.png")
-
-
-
-# file = input("Which file shall I use? ")
-# print(map_data.get_grayscale_value(400,400))
-
-
-
-# print((two_d_elev_list))
-# print(len(two_d_elev_list))
-# print(len(two_d_elev_list[0]))
+# map_image.save("friday_night_path2.png")
