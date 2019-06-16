@@ -3,18 +3,25 @@ from PIL import Image, ImageColor
 import random
 import argparse
 
+def read_asc_file(file):
+    print("got here")
+
 def read_file(file):
-    with open(file) as source_file:
-        source_str = source_file.read()
-        source_str = source_str.split("\n")
+    # get the file format
+    if file[len(file)-4:] == ".txt":
+        with open(file) as source_file:
+            source_str = source_file.read()
+            source_str = source_str.split("\n")
     
-    source_two_d_list = []
+        source_two_d_list = []
 
-    for line in source_str:
-        # I don't know why I'm getting empty lists, but I can clean them out
-        if line.split() != []:
-            source_two_d_list.append([int(_) for _ in line.split()])
+        for line in source_str:
+            # I don't know why I'm getting empty lists, but I can clean them out
+            if line.split() != []:
+                source_two_d_list.append([int(_) for _ in line.split()])
 
+    elif file[len(file)-4:] == ".asc":
+        source_two_d_list = read_asc_file(file)
     return source_two_d_list
 
 class MapData:
@@ -221,4 +228,5 @@ def main():
     pathfinder.retrace_path(best_path, best_color)
     map_image.show()
 
-main()
+# main()
+read_file("front_range.asc")
