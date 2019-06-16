@@ -177,39 +177,48 @@ class Pathfinder:
             self.map_image.putpixel(coord, color)
         return None
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--file", default="elevation_small.txt",
- help="choose the file you want to open")
-parser.add_argument("-bc", "--bestcolor", default="red",
- help="choose the color of the best path displayed")
-parser.add_argument("-pc", "--pathcolor", default="cyan",
- help="choose the color of the paths displayed")
-args = parser.parse_args()
-file = args.file
-path_color = args.pathcolor
-best_color = args.bestcolor
+def get_file_and_colors():
+    """gets the file path and colors from the terminal
+    returning file path, path_color, and best_color"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", default="elevation_small.txt",
+    help="choose the file you want to open")
+    parser.add_argument("-bc", "--bestcolor", default="red",
+    help="choose the color of the best path displayed")
+    parser.add_argument("-pc", "--pathcolor", default="cyan",
+    help="choose the color of the paths displayed")
+    args = parser.parse_args()
+    file = args.file
+    path_color = args.pathcolor
+    best_color = args.bestcolor
+    return file, args.pathcolor, args.bestcolor
 
-try:
+def main():
+    file, path_color, best_color = get_file_and_colors()
+
+    try:
+        map_data = MapData(read_file(file))
+    except:
+        print("File not found.")
+        exit()
+
+    # open the file and build the map objecs
     map_data = MapData(read_file(file))
-except:
-    print("File not found.")
-    exit()
+    map_image = MapImage(map_data)
+    pathfinder = Pathfinder(map_data,map_image)
 
-# open the file and build the map objecs
-# file = "elevation_small.txt"
-map_data = MapData(read_file(file))
-map_image = MapImage(map_data)
-pathfinder = Pathfinder(map_data,map_image)
+    # make a path for every y coordinate, recording them
+    delta_paths = {}
+    for y in range(map_data.get_length()):
+        pathfinder.set_start((0,y))
+        pathfinder.find_greedy_path(path_color)
+        delta_paths[pathfinder.get_total_delta()] = pathfinder.get_path_record()
 
-# make a path for every y coordinate, recording them
-delta_paths = {}
-for y in range(map_data.get_length()):
-    pathfinder.set_start((0,y))
-    pathfinder.find_greedy_path(path_color)
-    delta_paths[pathfinder.get_total_delta()] = pathfinder.get_path_record()
-# sort them and choose the smallest delta
-best_path = sorted(delta_paths.items(),key=lambda delta: delta[0])[0][1]
+    # sort them and choose the smallest delta
+    best_path = sorted(delta_paths.items(),key=lambda delta: delta[0])[0][1]
 
-# redraw that line in red
-pathfinder.retrace_path(best_path, best_color)
-map_image.show()
+    # redraw that line in user color, red by default
+    pathfinder.retrace_path(best_path, best_color)
+    map_image.show()
+
+main()
