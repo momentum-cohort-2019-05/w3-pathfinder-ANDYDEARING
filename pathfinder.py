@@ -180,8 +180,15 @@ class Pathfinder:
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", default="elevation_small.txt",
  help="choose the file you want to open")
+parser.add_argument("-bc", "--bestcolor", default="red",
+ help="choose the color of the best path displayed")
+parser.add_argument("-pc", "--pathcolor", default="cyan",
+ help="choose the color of the paths displayed")
 args = parser.parse_args()
 file = args.file
+path_color = args.pathcolor
+best_color = args.bestcolor
+
 try:
     map_data = MapData(read_file(file))
 except:
@@ -198,11 +205,11 @@ pathfinder = Pathfinder(map_data,map_image)
 delta_paths = {}
 for y in range(map_data.get_length()):
     pathfinder.set_start((0,y))
-    pathfinder.find_greedy_path()
+    pathfinder.find_greedy_path(path_color)
     delta_paths[pathfinder.get_total_delta()] = pathfinder.get_path_record()
 # sort them and choose the smallest delta
 best_path = sorted(delta_paths.items(),key=lambda delta: delta[0])[0][1]
 
 # redraw that line in red
-pathfinder.retrace_path(best_path, "red")
+pathfinder.retrace_path(best_path, best_color)
 map_image.show()
