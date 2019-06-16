@@ -4,10 +4,34 @@ import random
 import argparse
 
 def read_asc_file(file):
-    print("got here")
+    """reads a file in asc format"""
+    with open(file) as source_file:
+            source_str = source_file.read()
+            source_str = source_str.split()
+
+    # read the correct rows and columns from .asc format
+    num_cols = int(source_str[1])
+    num_rows = int(source_str[3])
+
+    source_two_d_list = []
+
+    # start reading at index 10 per .asc format
+    index = 10
+    
+    for _ in range(num_rows):
+        # empty for the new row
+        row = []
+        for _ in range(num_cols):
+            # make a row list
+            row.append(int(source_str[index]))
+            index += 1
+        # append that list
+        source_two_d_list.append(row)
+    
+    return source_two_d_list
 
 def read_file(file):
-    # get the file format
+    # get the file format, if .txt run here
     if file[len(file)-4:] == ".txt":
         with open(file) as source_file:
             source_str = source_file.read()
@@ -21,7 +45,9 @@ def read_file(file):
                 source_two_d_list.append([int(_) for _ in line.split()])
 
     elif file[len(file)-4:] == ".asc":
+        # otherwise run .asc function
         source_two_d_list = read_asc_file(file)
+
     return source_two_d_list
 
 class MapData:
@@ -228,5 +254,5 @@ def main():
     pathfinder.retrace_path(best_path, best_color)
     map_image.show()
 
-# main()
-read_file("front_range.asc")
+if __name__ == "__main__":
+    main()
