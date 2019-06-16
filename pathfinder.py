@@ -1,5 +1,4 @@
 from PIL import Image, ImageColor
-# import Image, ImageColor
 import random
 import argparse
 
@@ -149,10 +148,23 @@ class Pathfinder:
     def get_y(self):
         return self.curr_pos[1]
 
+    def out_of_bounds(self):
+        """returns a tuple with an out of bounds value"""
+        return ( self.map_data.get_width(), self.map_data.get_length() )
+
     def get_greedy_potenitals(self):
         """returns the next 3 coord tuples for greedy in the
         order: up_right, right, down_right"""
-        return (self.get_x()+1,self.get_y()+1), (self.get_x()+1, self.get_y()), (self.get_x()+1, self.get_y()-1)
+        # if the y position is not at the top or the bottom
+        # return all three poitentials
+        if self.map_data.get_length()-1 > self.get_y() > 0:
+            return (self.get_x()+1,self.get_y()+1),(self.get_x()+1, self.get_y()),(self.get_x()+1, self.get_y()-1)
+        # otherise return forward and down_right at the top
+        elif self.get_y() == 0:
+            return (self.get_x()+1,self.get_y()+1) , (self.get_x()+1, self.get_y()), self.out_of_bounds()
+        # or forward and up right at the bottom
+        else: 
+            return self.out_of_bounds(), (self.get_x()+1, self.get_y()), (self.get_x()+1, self.get_y()-1)
 
     def find_greedy_path(self, color="cyan"):
         """finds the path by the greedy algorithm"""
@@ -160,12 +172,13 @@ class Pathfinder:
         self.map_image.putpixel(self.curr_pos)
         # move from left to right via the greedy algorithm
         for _ in range(self.map_data.get_width()-self.get_x()-1):
-            up_right, right, down_right = self.get_greedy_potenitals()
+            # breakpoint()
+            down_right, right, up_right = self.get_greedy_potenitals()
             next_move_tup = self.get_greedy_move(up_right, right, down_right)
             self.curr_pos = next_move_tup
             self.map_image.putpixel(self.curr_pos, color)
 
-    def get_greedy_move(self, up_right, right, down_right):
+    def get_greedy_move(self, down_right, right, up_right):
         """recieves three tuples of (x,y) data (potentially None) and
         selects the best move by the greedy algorithm, returning a (column,row)
         tuple"""
@@ -194,6 +207,9 @@ class Pathfinder:
             right_move = right_move_list[0][0]
         self.total_delta += new_moves[right_move]
         self.path_record.append(right_move)
+        # debug
+        if right_move[1] < 0:
+            breakpoint()
         return right_move
 
     def get_total_delta(self):
