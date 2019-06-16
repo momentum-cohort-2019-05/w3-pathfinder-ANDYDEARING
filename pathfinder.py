@@ -1,5 +1,7 @@
 from PIL import Image, ImageColor
+# import Image, ImageColor
 import random
+import argparse
 
 def read_file(file):
     with open(file) as source_file:
@@ -175,8 +177,19 @@ class Pathfinder:
             self.map_image.putpixel(coord, color)
         return None
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--file", default="elevation_small.txt",
+ help="choose the file you want to open")
+args = parser.parse_args()
+file = args.file
+try:
+    map_data = MapData(read_file(file))
+except:
+    print("File not found.")
+    exit()
+
 # open the file and build the map objecs
-file = "elevation_small.txt"
+# file = "elevation_small.txt"
 map_data = MapData(read_file(file))
 map_image = MapImage(map_data)
 pathfinder = Pathfinder(map_data,map_image)
