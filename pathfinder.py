@@ -152,47 +152,51 @@ class Pathfinder:
         """returns a tuple with an out of bounds value"""
         return ( self.map_data.get_width(), self.map_data.get_length() )
 
-    def get_greedy_potenitals(self):
+    def get_greedy_potenitals(self, direction="r"):
         """returns the next 3 coord tuples for greedy in the
-        order: up_right, right, down_right"""
+        order: up_diag, straight, down_diag. Defaults to rightward"""
         # if the y position is not at the top or the bottom
         # return all three poitentials
+        if direction == "r":
+            dir_mod = 1
+        else:
+            dir_mod = -1
         if self.map_data.get_length()-1 > self.get_y() > 0:
-            return (self.get_x()+1,self.get_y()+1),(self.get_x()+1, self.get_y()),(self.get_x()+1, self.get_y()-1)
-        # otherise return forward and down_right at the top
+            return (self.get_x()+dir_mod,self.get_y()+1),(self.get_x()+dir_mod, self.get_y()),(self.get_x()+dir_mod, self.get_y()-1)
+        # otherise return forward and down diagonal at the top
         elif self.get_y() == 0:
-            return (self.get_x()+1,self.get_y()+1) , (self.get_x()+1, self.get_y()), self.out_of_bounds()
-        # or forward and up right at the bottom
+            return (self.get_x()+dir_mod,self.get_y()+1) , (self.get_x()+dir_mod, self.get_y()), self.out_of_bounds()
+        # or forward and up diagonal at the bottom
         else: 
-            return self.out_of_bounds(), (self.get_x()+1, self.get_y()), (self.get_x()+1, self.get_y()-1)
+            return self.out_of_bounds(), (self.get_x()+dir_mod, self.get_y()), (self.get_x()+dir_mod, self.get_y()-1)
 
-    def find_greedy_path(self, color="cyan"):
+    def find_greedy_path(self, color="cyan", direction="r"):
         """finds the path by the greedy algorithm"""
         # draw the starting point
         self.map_image.putpixel(self.curr_pos)
-        # move from left to right via the greedy algorithm
+        # move via the greedy algorithm
         for _ in range(self.map_data.get_width()-self.get_x()-1):
             # breakpoint()
-            down_right, right, up_right = self.get_greedy_potenitals()
-            next_move_tup = self.get_greedy_move(up_right, right, down_right)
+            down_diag, straight, up_diag = self.get_greedy_potenitals(direction)
+            next_move_tup = self.get_greedy_move(up_diag, straight, down_diag)
             self.curr_pos = next_move_tup
             self.map_image.putpixel(self.curr_pos, color)
 
-    def get_greedy_move(self, down_right, right, up_right):
+    def get_greedy_move(self, down_diag, straight, up_diag):
         """recieves three tuples of (x,y) data (potentially None) and
         selects the best move by the greedy algorithm, returning a (column,row)
-        tuple"""
+        tuple, defaults to a rightwards direction"""
         curr_elevation = self.map_data.get_value(self.curr_pos)
         new_moves = {}
-        new_elevation = self.map_data.get_value(up_right)
+        new_elevation = self.map_data.get_value(up_diag)
         if new_elevation is not None:
-            new_moves[up_right] = abs(curr_elevation-new_elevation)
-        new_elevation = self.map_data.get_value(right)
+            new_moves[up_diag] = abs(curr_elevation-new_elevation)
+        new_elevation = self.map_data.get_value(straight)
         if new_elevation is not None:
-            new_moves[right] = abs(curr_elevation-new_elevation)
-        new_elevation = self.map_data.get_value(down_right)
+            new_moves[straight] = abs(curr_elevation-new_elevation)
+        new_elevation = self.map_data.get_value(down_diag)
         if new_elevation is not None:
-            new_moves[down_right] = abs(curr_elevation-new_elevation)
+            new_moves[down_diag] = abs(curr_elevation-new_elevation)
         right_move_list = sorted(new_moves.items(),key=lambda move: move[1])
         # if there's a tie
         if right_move_list[0][1]==right_move_list[1][1]:
@@ -227,12 +231,20 @@ class Pathfinder:
             self.map_image.putpixel(coord, color)
         return None
 
-    def find_double_greedy(self, direction, color="cyan"):
-        """find a greedy path in either direction, prioritizing straight"""
-        if direction == "left":
-            dir_mod = -1
-        else:
-            dir_mod = 1
+    def find_double_greedy(self, color="cyan"):
+        """find a greedy path in both directions. Expects a 
+        string of "left" to go left on the map, otherwise will go right"""
+        # store the current point as the starting point
+        start_pos = self.curr_pos
+
+        # go right, go back to the middle, go left
+        self.find_greedy_path(color,"r")
+        self.curr_pos = start_pos
+        self.find_greedy_path(color,"l")
+
+
+        
+        
 
 def get_file_and_colors():
     """gets the file path and colors from the terminal
@@ -293,23 +305,12 @@ def advanced():
     pathfinder = Pathfinder(map_data,map_image)
 
     # start in the middle
-    total_delta = 0
     start_tup = (int(map_data.get_width()/2),int(map_data.get_length()/2))
     pathfinder.set_start(start_tup)
-
-    # go right and record
-    pathfinder.find_double_greedy("right", path_color)
-    right_path = pathfinder.get_path_record()
-    total_delta += pathfinder.get_total_delta()
-
-    # go back to the middle, go left, and record
-    pathfinder.set_start(start_tup)
-    pathfinder.find_double_greedy("left", path_color)
-    left_path = pathfinder.get_path_record()
-    total_delta += pathfinder.get_total_delta()
-
-    # add the two lists together
-    full_path_record = right_path.append(left_path)
+    pathfinder.find_double_greedy(path_color)
+    full_path_record = pathfinder.get_path_record()
+    total_delta = pathfinder.get_total_delta()
+    map_image.show()
 
 if __name__ == "__main__":
     try:
