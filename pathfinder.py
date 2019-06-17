@@ -205,6 +205,7 @@ class Pathfinder:
         # or choose the winner if it's clear
         else:
             right_move = right_move_list[0][0]
+
         self.total_delta += new_moves[right_move]
         self.path_record.append(right_move)
         # debug
@@ -225,6 +226,9 @@ class Pathfinder:
         for coord in path_list:
             self.map_image.putpixel(coord, color)
         return None
+
+    def find_greedy_river(self, direction, start_pt=self.curr_pos):
+        
 
 def get_file_and_colors():
     """gets the file path and colors from the terminal
@@ -270,5 +274,29 @@ def main():
     pathfinder.retrace_path(best_path, best_color)
     map_image.show()
 
+def advanced():
+    file, path_color, best_color = get_file_and_colors()
+
+    try:
+        map_data = MapData(read_file(file))
+    except:
+        print("File not found.")
+        exit()
+
+    # open the file and build the map objecs
+    map_data = MapData(read_file(file))
+    map_image = MapImage(map_data)
+    pathfinder = Pathfinder(map_data,map_image)
+
+    # start in the middle
+    start_tup = (int(map_data.get_width()/2),int(map_data.get_length()/2))
+    pathfinder.set_start(start_tup)
+    pathfinder.find_greedy_river("right")
+    pathfinder.find_greedy_river("left", start_tup)
+
+    # find path going right
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    advanced()
