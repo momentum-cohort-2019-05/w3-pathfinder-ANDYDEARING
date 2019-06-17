@@ -285,6 +285,7 @@ def main():
 
     # sort them and choose the smallest delta
     best_path = sorted(delta_paths.items(),key=lambda delta: delta[0])[0][1]
+    print(sorted(delta_paths.items(),key=lambda delta: delta[0])[0][0])
 
     # redraw that line in user color, red by default
     pathfinder.retrace_path(best_path, best_color)
@@ -311,6 +312,7 @@ def advanced():
     full_path_record = pathfinder.get_path_record()
     total_delta = pathfinder.get_total_delta()
     map_image.show()
+    print(pathfinder.get_total_delta())
 
 if __name__ == "__main__":
     try:
