@@ -227,8 +227,12 @@ class Pathfinder:
             self.map_image.putpixel(coord, color)
         return None
 
-    def find_greedy_river(self, direction, start_pt=self.curr_pos):
-        
+    def find_double_greedy(self, direction, color="cyan"):
+        """find a greedy path in either direction, prioritizing straight"""
+        if direction == "left":
+            dir_mod = -1
+        else:
+            dir_mod = 1
 
 def get_file_and_colors():
     """gets the file path and colors from the terminal
@@ -289,14 +293,31 @@ def advanced():
     pathfinder = Pathfinder(map_data,map_image)
 
     # start in the middle
+    total_delta = 0
     start_tup = (int(map_data.get_width()/2),int(map_data.get_length()/2))
     pathfinder.set_start(start_tup)
-    pathfinder.find_greedy_river("right")
-    pathfinder.find_greedy_river("left", start_tup)
 
-    # find path going right
+    # go right and record
+    pathfinder.find_double_greedy("right", path_color)
+    right_path = pathfinder.get_path_record()
+    total_delta += pathfinder.get_total_delta()
 
+    # go back to the middle, go left, and record
+    pathfinder.set_start(start_tup)
+    pathfinder.find_double_greedy("left", path_color)
+    left_path = pathfinder.get_path_record()
+    total_delta += pathfinder.get_total_delta()
+
+    # add the two lists together
+    full_path_record = right_path.append(left_path)
 
 if __name__ == "__main__":
-    # main()
-    advanced()
+    try:
+        mode = input("Which mode (Normal/Advanced)? ")
+        if mode[0].lower() == "a":
+            advanced()
+        else:
+            main()
+    except:
+        print("Get your life right.")
+    
